@@ -1,17 +1,20 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.artofarc.eai</groupId>
 	<artifactId>aq-jndi</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.1-SNAPSHOT</version>
 	<name>aq-jndi</name>
 	<url>http://maven.apache.org</url>
+	<properties>
+		<project.scm.id>my-github</project.scm.id>
+	</properties>	
 	<scm>
-		<url>https://github.com/karalus/aq-jndi</url>
-		<connection>scm:git:git@github.com:karalus/aq-jndi.git</connection>
-		<developerConnection>scm:git:git@github.com:karalus/aq-jndi.git</developerConnection>
-	</scm>	
+		<url>https://github.com/karalus/aq-jndi.git</url>
+		<connection>scm:git:https://github.com/karalus/aq-jndi</connection>
+		<developerConnection>scm:git:https://github.com/karalus/aq-jndi</developerConnection>
+	  <tag>HEAD</tag>
+  </scm>	
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -36,6 +39,11 @@
 						<source>1.7</source>
 						<target>1.7</target>
 					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.5.3</version>                
 				</plugin>
 			</plugins>
 		</pluginManagement>
