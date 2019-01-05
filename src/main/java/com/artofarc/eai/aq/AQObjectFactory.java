@@ -1,30 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.artofarc.eai.aq;
 
 import java.lang.reflect.Method;
 import java.util.Hashtable;
 import java.util.Properties;
 
-import javax.jms.ConnectionFactory;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
+import javax.naming.NamingException;
 import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 import javax.sql.DataSource;
 
-public class AQObjectFactory implements ObjectFactory {
+public final class AQObjectFactory implements ObjectFactory {
 
 	@Override
-	public Object getObjectInstance(Object object, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
-		Class<?> classAQjmsFactory = Class.forName("oracle.jms.AQjmsFactory");
+	public Object getObjectInstance(Object object, Name name, Context nameCtx, Hashtable<?, ?> environment) throws ReflectiveOperationException, NamingException {
+		Class<?> classAQjmsFactory;
+		try {
+			classAQjmsFactory = Class.forName("oracle.jms.AQjmsFactory");
+		} catch (ClassNotFoundException e) {
+			throw new ClassNotFoundException("aqapi.jar not in classpath");
+		}
 
 		Object result = null;
 		if (object instanceof Reference) {
 			Reference reference = (Reference) object;
 
 			Class<?> class1 = Class.forName(reference.getClassName());
-			if (ConnectionFactory.class.isAssignableFrom(class1)) {
+			if (javax.jms.ConnectionFactory.class.isAssignableFrom(class1)) {
 				// For meaning of compliant refer to https://docs.oracle.com/cd/B13789_01/server.101/b10785/jm_create.htm
 				RefAddr refAddr = reference.get("compliant");
 				Boolean compliant = refAddr != null ? new Boolean((String) refAddr.getContent()) : Boolean.TRUE;
@@ -50,7 +71,7 @@ public class AQObjectFactory implements ObjectFactory {
 						Properties info = new Properties();
 						refAddr = reference.get("user");
 						if (refAddr != null) {
-	                  info.put("user", refAddr.getContent());
+							info.put("user", refAddr.getContent());
 							refAddr = reference.get("password");
 							if (refAddr != null) {
 								info.put("password", refAddr.getContent());
@@ -60,7 +81,7 @@ public class AQObjectFactory implements ObjectFactory {
 					}
 				}
 			}
-		} else {
+		} else if (environment != null) {
 			String url = (String) environment.get("jdbcURL");
 			if (url != null && !url.isEmpty()) {
 				Method method = classAQjmsFactory.getMethod("getConnectionFactory", String.class, Properties.class, Boolean.TYPE);

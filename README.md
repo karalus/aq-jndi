@@ -40,5 +40,6 @@ Important: You need to configure the DataSource via Oracle's UCP - the internal 
 
 ### Release notes ###
 
-1.0 initial release
-1.1 support of JBoss EAP 7.1, make compliant=true the default
+1.0 Initial release
+
+1.1 Support for JBoss EAP 7.1, make compliant=true the default, allow user/password to specified separately when using jdbcURL
