@@ -47,17 +47,28 @@ public class AQObjectFactory implements ObjectFactory {
 						String url = (String) refAddr.getContent();
 
 						Method method = classAQjmsFactory.getMethod("getConnectionFactory", String.class, Properties.class, Boolean.TYPE);
-						result = method.invoke(null, url, new Properties(), compliant);
+						Properties info = new Properties();
+						refAddr = reference.get("user");
+						if (refAddr != null) {
+	                  info.put("user", refAddr.getContent());
+							refAddr = reference.get("password");
+							if (refAddr != null) {
+								info.put("password", refAddr.getContent());
+							}
+						}
+						result = method.invoke(null, url, info, compliant);
 					}
 				}
 			}
 		} else {
 			String url = (String) environment.get("jdbcURL");
 			if (url != null && !url.isEmpty()) {
+				Method method = classAQjmsFactory.getMethod("getConnectionFactory", String.class, Properties.class, Boolean.TYPE);
 				String compliantStr = (String) environment.get("compliant");
 				Boolean compliant = compliantStr != null ? new Boolean(compliantStr) : Boolean.TRUE;
-				Method method = classAQjmsFactory.getMethod("getConnectionFactory", String.class, Properties.class, Boolean.TYPE);
-				result = method.invoke(null, url, new Properties(), compliant);
+				Properties info = new Properties();
+				info.putAll(environment);
+				result = method.invoke(null, url, info, compliant);
 			}
 		}
 		return result;
