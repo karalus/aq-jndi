@@ -10,11 +10,17 @@
 		<project.scm.id>my-github</project.scm.id>
 	</properties>	
 	<scm>
-		<url>https://github.com/karalus/aq-jndi.git</url>
-		<connection>scm:git:https://github.com/karalus/aq-jndi</connection>
-		<developerConnection>scm:git:https://github.com/karalus/aq-jndi</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>	
+		<url>scm:git:git@github.com:karalus/aq-jndi.git</url>
+		<connection>scm:git:git@github.com:karalus/aq-jndi.git</connection>
+		<developerConnection>scm:git:git@github.com:karalus/aq-jndi.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>	
+	<distributionManagement>
+		<repository>
+			<id>localDeploy</id>
+			<url>file:///tmp</url>
+		</repository>
+	</distributionManagement>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>

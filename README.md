@@ -37,3 +37,8 @@ You can also use it via DataSource:
 ```
 
 Important: You need to configure the DataSource via Oracle's UCP - the internal Tomcat JDBC Connection Pool does not work.
+
+### Release notes ###
+
+1.0 initial release
+1.1 support of JBoss EAP 7.1, make compliant=true the default
