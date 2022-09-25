@@ -1,12 +1,11 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Copyright 2022 Andre Karalus
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,56 +42,70 @@ public final class AQObjectFactory implements ObjectFactory {
 		Object result = null;
 		if (object instanceof Reference) {
 			Reference reference = (Reference) object;
+			String methodName = getMethodForType(reference.getClassName());
 
-			Class<?> class1 = Class.forName(reference.getClassName());
-			if (javax.jms.ConnectionFactory.class.isAssignableFrom(class1)) {
-				// For meaning of compliant refer to https://docs.oracle.com/cd/B13789_01/server.101/b10785/jm_create.htm
-				RefAddr refAddr = reference.get("compliant");
-				Boolean compliant = refAddr != null ? new Boolean((String) refAddr.getContent()) : Boolean.TRUE;
+			// For meaning of compliant refer to https://docs.oracle.com/cd/B13789_01/server.101/b10785/jm_create.htm
+			RefAddr refAddr = reference.get("compliant");
+			Boolean compliant = refAddr != null ? Boolean.valueOf((String) refAddr.getContent()) : Boolean.TRUE;
 
-				refAddr = reference.get("dataSource");
+			refAddr = reference.get("dataSource");
+			if (refAddr != null) {
+				String ds = (String) refAddr.getContent();
+
+				InitialContext initialContext = new InitialContext();
+				try {
+					DataSource dataSource = (DataSource) initialContext.lookup(ds);
+					Method method = classAQjmsFactory.getMethod(methodName, DataSource.class, Boolean.TYPE);
+					result = method.invoke(null, dataSource, compliant);
+				} finally {
+					initialContext.close();
+				}
+			} else {
+				refAddr = reference.get("jdbcURL");
 				if (refAddr != null) {
-					String ds = (String) refAddr.getContent();
+					String url = (String) refAddr.getContent();
 
-					InitialContext initialContext = new InitialContext();
-					try {
-						DataSource dataSource = (DataSource) initialContext.lookup(ds);
-						Method method = classAQjmsFactory.getMethod("getConnectionFactory", DataSource.class, Boolean.TYPE);
-						result = method.invoke(null, dataSource, compliant);
-					} finally {
-						initialContext.close();
-					}
-				} else {
-					refAddr = reference.get("jdbcURL");
+					Method method = classAQjmsFactory.getMethod(methodName, String.class, Properties.class, Boolean.TYPE);
+					Properties info = new Properties();
+					refAddr = reference.get("user");
 					if (refAddr != null) {
-						String url = (String) refAddr.getContent();
-
-						Method method = classAQjmsFactory.getMethod("getConnectionFactory", String.class, Properties.class, Boolean.TYPE);
-						Properties info = new Properties();
-						refAddr = reference.get("user");
+						info.put("user", refAddr.getContent());
+						refAddr = reference.get("password");
 						if (refAddr != null) {
-							info.put("user", refAddr.getContent());
-							refAddr = reference.get("password");
-							if (refAddr != null) {
-								info.put("password", refAddr.getContent());
-							}
+							info.put("password", refAddr.getContent());
 						}
-						result = method.invoke(null, url, info, compliant);
 					}
+					result = method.invoke(null, url, info, compliant);
 				}
 			}
 		} else if (environment != null) {
 			String url = (String) environment.get("jdbcURL");
 			if (url != null && !url.isEmpty()) {
-				Method method = classAQjmsFactory.getMethod("getConnectionFactory", String.class, Properties.class, Boolean.TYPE);
+				String type = (String) environment.get("type");
+				String methodName = type != null ? getMethodForType(type) : "getConnectionFactory";
+				Method method = classAQjmsFactory.getMethod(methodName, String.class, Properties.class, Boolean.TYPE);
 				String compliantStr = (String) environment.get("compliant");
-				Boolean compliant = compliantStr != null ? new Boolean(compliantStr) : Boolean.TRUE;
+				Boolean compliant = compliantStr != null ? Boolean.valueOf(compliantStr) : Boolean.TRUE;
 				Properties info = new Properties();
 				info.putAll(environment);
 				result = method.invoke(null, url, info, compliant);
 			}
 		}
 		return result;
+	}
+
+	private static String getMethodForType(String type) throws ClassNotFoundException {
+		Class<?> class1 = Class.forName(type);
+		if (javax.jms.ConnectionFactory.class.isAssignableFrom(class1)) {
+			String name = class1.getSimpleName();
+			if (name.startsWith("AQjms")) {
+				return "get" + name.substring("AQjms".length());
+			} else {
+				return "get" + name;
+			}
+		} else {
+			throw new IllegalArgumentException("Class does not implement javax.jms.ConnectionFactory " + type);
+		}
 	}
 
 }
